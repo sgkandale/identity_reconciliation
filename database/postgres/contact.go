@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"identity/database"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func (c *Client) PutContact(ctx context.Context, contact *database.Contact) error {
@@ -95,10 +97,10 @@ func (c Client) FindRecentContact(ctx context.Context, childContact *database.Co
 
 	wg.Wait()
 
-	if lastContactByPhoneErr != nil {
+	if lastContactByPhoneErr != nil && lastContactByPhoneErr != pgx.ErrNoRows {
 		return nil, fmt.Errorf("finding contact by phone : %s", lastContactByPhoneErr.Error())
 	}
-	if lastContactByEmailErr != nil {
+	if lastContactByEmailErr != nil && lastContactByEmailErr != pgx.ErrNoRows {
 		return nil, fmt.Errorf("finding contact by email : %s", lastContactByEmailErr.Error())
 	}
 
@@ -227,6 +229,9 @@ func (c Client) FindAllContacts(ctx context.Context, email, phone string) ([]*da
 		phone, email,
 	)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("finding all contacts in postgres : %s", err.Error())
 	}
 	contacts := make([]*database.Contact, 0)
