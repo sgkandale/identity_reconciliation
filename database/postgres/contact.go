@@ -153,6 +153,9 @@ func (c Client) FindContactByEmail(ctx context.Context, email string) (*database
 		&contact.UpdatedAt,
 	)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("finding contact in postgres : %s", err.Error())
 	}
 
@@ -191,6 +194,9 @@ func (c Client) FindContactByPhone(ctx context.Context, phone string) (*database
 		&contact.UpdatedAt,
 	)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("finding contact in postgres : %s", err.Error())
 	}
 
