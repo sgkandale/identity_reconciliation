@@ -3,7 +3,9 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
+	"time"
 
 	"identity/database"
 
@@ -104,8 +106,37 @@ func (c Client) FindRecentContact(ctx context.Context, childContact *database.Co
 		return nil, fmt.Errorf("finding contact by email : %s", lastContactByEmailErr.Error())
 	}
 
-	// if both are present, return the latest one
+	// if both are present, and different
 	if lastContactByPhone != nil && lastContactByEmail != nil {
+		// if both are different
+		// set earliest one to primary, and rest all to secondary,
+		if lastContactByPhone.Id != lastContactByEmail.Id {
+			// get earliest one
+			allContacts, err := c.FindAllContacts(ctx, childContact.Email, childContact.PhoneNumber)
+			if err != nil {
+				return nil, fmt.Errorf("finding all contacts for linking update : %s", err.Error())
+			}
+			// sort by created at
+			sort.SliceStable(allContacts, func(i, j int) bool {
+				return allContacts[i].CreatedAt.Before(allContacts[j].CreatedAt)
+			})
+			// update all others after first without linkedid to first one's id
+			baseId := allContacts[0].Id
+			linkIdUpdateWg := sync.WaitGroup{}
+			for i := 1; i < len(allContacts); i++ {
+				linkIdUpdateWg.Add(1)
+				go func(i int) {
+					defer linkIdUpdateWg.Done()
+					err := c.UpdateLinkId(ctx, allContacts[i].Id, baseId)
+					if err != nil {
+						fmt.Println("error updating link id : ", err.Error())
+					}
+				}(i)
+			}
+			linkIdUpdateWg.Wait()
+		}
+
+		// and return the latest one
 		if lastContactByPhone.UpdatedAt.After(lastContactByEmail.UpdatedAt) {
 			return lastContactByPhone, nil
 		}
