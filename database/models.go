@@ -13,7 +13,7 @@ type Contact struct {
 	Id             int64                 `json:"id,omitempty"`
 	PhoneNumber    string                `json:"phoneNumber,omitempty"`
 	Email          string                `json:"email,omitempty"`
-	LinkedId       int64                 `json:"linkedId,omitempty"`
+	LinkedId       *int64                `json:"linkedId,omitempty"`
 	LinkPrecedence ContactLinkPrecedence `json:"linkPrecedence,omitempty"`
 	CreatedAt      time.Time             `json:"createdAt,omitempty"`
 	UpdatedAt      time.Time             `json:"updatedAt,omitempty"`

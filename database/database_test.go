@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"context"
+	"log"
 	"testing"
 	"time"
 
@@ -41,10 +42,10 @@ func TestPutContact(t *testing.T) {
 	err := dbConn.PutContact(
 		context.Background(),
 		&database.Contact{
-			PhoneNumber:    "1234",
-			Email:          "abcd",
-			LinkedId:       3,
-			LinkPrecedence: database.ContactLinkPrecedence_Primary,
+			PhoneNumber:    "123456",
+			Email:          "mcfly@hillvalley.edu",
+			LinkedId:       nil,
+			LinkPrecedence: database.ContactLinkPrecedence_Secondary,
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		},

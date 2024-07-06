@@ -36,7 +36,7 @@ func (c *Client) PutContact(ctx context.Context, contact *database.Contact) erro
 	}
 
 	// if linked id is present
-	if contact.LinkedId > 0 {
+	if contact.LinkedId != nil && *contact.LinkedId != 0 {
 		argumentValues = append(argumentValues, contact.LinkedId)
 		insertFields += `linkedId, `
 		insertPositionsCount++
@@ -136,10 +136,9 @@ func (c Client) FindContactByEmail(ctx context.Context, email string) (*database
 	err := c.Pool.QueryRow(
 		callCtx,
 		`SELECT 
-		(
-			id, phoneNumber, email, linkedId, 
+			id, COALESCE(phoneNumber, ''), 
+			COALESCE(email, ''), linkedId, 
 			linkPrecedence, createdAt, updatedAt
-		)
 		FROM `+TableName_Contact+`
 		WHERE email = $1
 		ORDER BY updatedAt DESC
@@ -177,10 +176,9 @@ func (c Client) FindContactByPhone(ctx context.Context, phone string) (*database
 	err := c.Pool.QueryRow(
 		callCtx,
 		`SELECT
-		(
-			id, phoneNumber, email, linkedId,
+			id, COALESCE(phoneNumber, ''), 
+			COALESCE(email, ''), linkedId,
 			linkPrecedence, createdAt, updatedAt
-		)
 		FROM `+TableName_Contact+`
 		WHERE phoneNumber = $1
 		ORDER BY updatedAt DESC
@@ -213,7 +211,7 @@ func (c Client) FindAllContacts(ctx context.Context, email, phone string) ([]*da
 		callCtx,
 		`WITH RECURSIVE linked_contacts AS (
 			SELECT 
-				id, phoneNumber, email, 
+				id, phoneNumber, email,
 				linkedId, linkPrecedence
 			FROM Contact
 			WHERE phoneNumber = $1 OR email = $2
@@ -223,7 +221,8 @@ func (c Client) FindAllContacts(ctx context.Context, email, phone string) ([]*da
 			INNER JOIN linked_contacts lc ON cc.linkedId = lc.id OR lc.linkedId = cc.id
 		)
 		SELECT 
-			id, phoneNumber, email, 
+			id, COALESCE(phoneNumber, ''), 
+			COALESCE(email, ''),
 			linkedId, linkPrecedence 
 		FROM linked_contacts;`,
 		phone, email,
