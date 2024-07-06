@@ -38,7 +38,7 @@ func TestNewPostgres(t *testing.T) {
 }
 
 func TestPutContact(t *testing.T) {
-	dbConn.PutContact(
+	err := dbConn.PutContact(
 		context.Background(),
 		&database.Contact{
 			PhoneNumber:    "1234",
@@ -49,6 +49,9 @@ func TestPutContact(t *testing.T) {
 			UpdatedAt:      time.Now(),
 		},
 	)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestFindRecentContact(t *testing.T) {
@@ -61,6 +64,7 @@ func TestFindRecentContact(t *testing.T) {
 	)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	log.Printf("contact : %+v", contact)
 }
@@ -72,6 +76,7 @@ func TestFindContactByEmail(t *testing.T) {
 	)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	log.Printf("contact : %+v", contact)
 }
@@ -83,6 +88,24 @@ func TestFindContactByPhone(t *testing.T) {
 	)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	log.Printf("contact : %+v", contact)
+}
+
+func TestFindAllContacts(t *testing.T) {
+	contacts, err := dbConn.FindAllContacts(
+		context.Background(),
+		"abcd",
+		"1234",
+	)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	for _, eachContact := range contacts {
+		log.Printf("contact : %+v", eachContact)
+	}
+	log.Printf("total contacts : %d", len(contacts))
 }

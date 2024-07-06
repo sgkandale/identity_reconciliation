@@ -196,3 +196,51 @@ func (c Client) FindContactByPhone(ctx context.Context, phone string) (*database
 
 	return &contact, nil
 }
+
+func (c Client) FindAllContacts(ctx context.Context, email, phone string) ([]*database.Contact, error) {
+	callCtx, cancelCallCtx := context.WithTimeout(ctx, c.timeout)
+	defer cancelCallCtx()
+
+	rows, err := c.Pool.Query(
+		callCtx,
+		`WITH RECURSIVE linked_contacts AS (
+			SELECT 
+				id, phoneNumber, email, 
+				linkedId, linkPrecedence
+			FROM Contact
+			WHERE phoneNumber = $1 OR email = $2
+			UNION
+			SELECT cc.id, cc.phoneNumber, cc.email, cc.linkedId, cc.linkPrecedence
+			FROM Contact cc
+			INNER JOIN linked_contacts lc ON cc.linkedId = lc.id OR lc.linkedId = cc.id
+		)
+		SELECT 
+			id, phoneNumber, email, 
+			linkedId, linkPrecedence 
+		FROM linked_contacts;`,
+		phone, email,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("finding all contacts in postgres : %s", err.Error())
+	}
+	contacts := make([]*database.Contact, 0)
+	// add all contacts to slice
+	for rows.Next() {
+		contact := database.Contact{}
+		err := rows.Scan(
+			&contact.Id,
+			&contact.PhoneNumber,
+			&contact.Email,
+			&contact.LinkedId,
+			&contact.LinkPrecedence,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning contact in postgres : %s", err.Error())
+		}
+		contacts = append(contacts, &contact)
+	}
+	// close rows
+	rows.Close()
+	// return contacts
+	return contacts, nil
+}
