@@ -14,7 +14,7 @@ func GetGeneralResponseError(err error) GeneralResponse {
 
 type IdentifyRequest struct {
 	Email       string `json:"email"`
-	PhoneNumber int64  `json:"phoneNumber"`
+	PhoneNumber string `json:"phoneNumber"`
 }
 
 type IdentifyResponseContact struct {
