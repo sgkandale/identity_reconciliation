@@ -254,3 +254,27 @@ func (c Client) FindAllContacts(ctx context.Context, email, phone string) ([]*da
 	// return contacts
 	return contacts, nil
 }
+
+func (c *Client) UpdateLinkId(ctx context.Context, contactId, linkedId int64) error {
+	callCtx, cancelCallCtx := context.WithTimeout(ctx, c.timeout)
+	defer cancelCallCtx()
+
+	_, err := c.Pool.Exec(
+		callCtx,
+		`UPDATE `+TableName_Contact+`
+		SET 
+			linkedId = $1,
+			updatedAt = $2,
+			linkPrecedence = $3
+		WHERE id = $4`,
+		linkedId,
+		time.Now(),
+		database.ContactLinkPrecedence_Secondary,
+		contactId,
+	)
+	if err != nil {
+		return fmt.Errorf("updating link id in postgres : %s", err.Error())
+	}
+
+	return nil
+}

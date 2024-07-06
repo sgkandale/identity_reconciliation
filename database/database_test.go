@@ -110,3 +110,15 @@ func TestFindAllContacts(t *testing.T) {
 	}
 	log.Printf("total contacts : %d", len(contacts))
 }
+
+func TestUpdateLinkId(t *testing.T) {
+	err := dbConn.UpdateLinkId(
+		context.Background(),
+		5,
+		4,
+	)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}

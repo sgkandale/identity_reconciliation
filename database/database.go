@@ -8,4 +8,5 @@ type Database interface {
 	FindContactByEmail(ctx context.Context, email string) (*Contact, error)
 	FindContactByPhone(ctx context.Context, phone string) (*Contact, error)
 	FindAllContacts(ctx context.Context, email, phone string) ([]*Contact, error)
+	UpdateLinkId(ctx context.Context, contactId, linkedId int64) error
 }
