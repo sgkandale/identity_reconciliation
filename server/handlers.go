@@ -70,6 +70,7 @@ func (s *Server) Identify(ctx *gin.Context) {
 				},
 			},
 		)
+		return
 	}
 
 	// if recent contact exists, find all contacts
@@ -108,13 +109,37 @@ func (s *Server) Identify(ctx *gin.Context) {
 		}
 	}
 
+	responseEmails := []string{primaryEmail}
+	uniqueEmailsMap := map[string]bool{
+		primaryEmail: true,
+	}
+	for _, email := range secondaryEmails {
+		_, emailExists := uniqueEmailsMap[email]
+		if !emailExists {
+			responseEmails = append(responseEmails, email)
+			uniqueEmailsMap[email] = true
+		}
+	}
+
+	responsePhoneNumbers := []string{primaryPhone}
+	uniquePhoneNumbersMap := map[string]bool{
+		primaryPhone: true,
+	}
+	for _, phone := range secondaryPhones {
+		_, phoneExists := uniquePhoneNumbersMap[phone]
+		if !phoneExists {
+			responsePhoneNumbers = append(responsePhoneNumbers, phone)
+			uniquePhoneNumbersMap[phone] = true
+		}
+	}
+
 	ctx.JSON(
 		http.StatusOK,
 		IdentifyResponse{
 			Contact: IdentifyResponseContact{
 				PrimaryContactId:    primaryContactId,
-				Emails:              append([]string{primaryEmail}, secondaryEmails...),
-				PhoneNumbers:        append([]string{primaryPhone}, secondaryPhones...),
+				Emails:              responseEmails,
+				PhoneNumbers:        responsePhoneNumbers,
 				SecondaryContactIds: secondaryIds,
 			},
 		},
