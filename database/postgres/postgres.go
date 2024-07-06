@@ -17,6 +17,10 @@ type Client struct {
 	timeout time.Duration
 }
 
+const (
+	TableName_Contact = "Contact"
+)
+
 func New(ctx context.Context, cfg *config.DatabaseConfig) database.Database {
 	log.Print("[INFO] creating postgres connection")
 	if cfg == nil {
